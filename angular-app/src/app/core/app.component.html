@@ -1,0 +1,84 @@
+<div class="app-container" [attr.data-theme]="settings.theme">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <h1 class="app-title">
+        <i class="fas fa-film"></i>
+        {{ title }}
+      </h1>
+      
+      <div class="library-stats" *ngIf="library.length > 0">
+        {{ library.length }} {{ library.length | i18nPlural: {'=0': 'мультфильмов', '=1': 'мультфильм', 'other': 'мультфильма'} }}
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <!-- Кнопка добавления -->
+      <button class="btn btn-primary" (click)="openAddModal()" title="Добавить мультфильм">
+        <i class="fas fa-plus"></i>
+        <span class="btn-text">Добавить</span>
+      </button>
+      
+      <!-- Кнопка настроек -->
+      <button class="btn-icon" (click)="openSettings()" title="Настройки">
+        <i class="fas fa-cog"></i>
+      </button>
+      
+      <!-- Управление окном (только в Electron) -->
+      <div class="window-controls" *ngIf="electronService.isElectron">
+        <button class="btn-icon" (click)="minimize()" title="Свернуть">
+          <i class="fas fa-window-minimize"></i>
+        </button>
+        <button class="btn-icon" (click)="maximize()" title="Развернуть">
+          <i class="fas fa-window-maximize"></i>
+        </button>
+        <button class="btn-icon close" (click)="close()" title="Закрыть">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <main class="app-main">
+    <div class="library-container">
+      <div *ngIf="library.length > 0" class="library-grid">
+        <app-card 
+          *ngFor="let item of library"
+          [item]="item"
+          (play)="playItem($event)"
+          (edit)="editItem($event)"
+          (delete)="deleteItem($event)">
+        </app-card>
+      </div>
+      
+      <div *ngIf="library.length === 0" class="empty-state">
+        <i class="fas fa-film"></i>
+        <h3>Библиотека пуста</h3>
+        <p>Добавьте свой первый мультфильм, чтобы начать просмотр</p>
+        <button class="btn btn-primary" (click)="openAddModal()">
+          <i class="fas fa-plus"></i>
+          Добавить первый мультфильм
+        </button>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Модальные окна -->
+  <app-add-modal 
+    *ngIf="showAddModal"
+    [item]="editingItem"
+    (save)="onSaveItem($event)"
+    (close)="onCloseAddModal()">
+  </app-add-modal>
+  
+  <app-settings-modal 
+    *ngIf="showSettingsModal"
+    [settings]="settings"
+    (save)="onSaveSettings($event)"
+    (close)="closeSettings()">
+  </app-settings-modal>
+  
+  <!-- Уведомления -->
+  <app-notification></app-notification>
+</div>

@@ -1,0 +1,87 @@
+# ============================================
+# Electron + Node.js .gitignore
+# ============================================
+
+# ========== ЗАВИСИМОСТИ ==========
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+nul
+  
+# если используете yarn.lock
+package-lock.json
+angular-app/package-lock.json
+
+         
+# если используете package-lock.json
+yarn.lock 
+
+# ========== СБОРКА И РАСПРЕДЕЛЕНИЕ ==========
+# Папка со сборками
+dist/    
+# Альтернативная папка сборки           
+out/     
+# Релизные версии           
+release/ 
+# Временные файлы сборки           
+build/      
+# Иконка приложения (если хотите хранить отдельно)        
+app/icon.ico    
+playlists/
+posters/
+assets/fonts/
+angular-app/src/assets/fonts/
+# Исполняемые файлы    
+*.exe               
+*.dmg               # Mac установщики
+*.AppImage          # Linux приложения
+*.snap              # Linux snap пакеты
+*.deb               # Debian пакеты
+*.rpm               # RPM пакеты
+
+# ========== ФАЙЛЫ ПРИЛОЖЕНИЯ (не коммитить) ==========
+# Эти файлы создаются приложением во время работы
+# Ваша база данных мультфильмов
+app/library.json
+# Настройки пользователя (если добавили)
+app/settings.json
+# Любые другие базы данных         
+*.db     
+# SQLite базы данных                
+*.sqlite                 
+
+# ========== СИСТЕМНЫЕ ФАЙЛЫ ==========
+.DS_Store                # Mac
+Thumbs.db                # Windows
+desktop.ini              # Windows
+*.lnk                    # Ярлыки Windows
+
+# ========== РЕДАКТОРЫ КОДА ==========
+.vscode/                 # Visual Studio Code
+.idea/                   # JetBrains IDE
+*.swp                    # Vim
+*.swo
+*~
+
+# ========== ВРЕМЕННЫЕ ФАЙЛЫ ==========
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ========== ЛОГИ ==========
+logs/
+*.log
+
+# ========== СРЕДА РАЗРАБОТКИ ==========
+.env
+.env.local
+.env.*.local
+
+# ========== ДРУГИЕ ==========
+.cache/
+.sass-cache/
+*.css.map
+coverage/                # Покрытие тестами
+.nyc_output/             # Тесты

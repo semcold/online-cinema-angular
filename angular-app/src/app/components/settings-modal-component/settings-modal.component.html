@@ -1,0 +1,159 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-cog"></i> Настройки
+      </h2>
+      <button class="btn-icon close-btn" (click)="onCancel()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-content">
+      <form [formGroup]="form" (ngSubmit)="onSave()">
+        <!-- Раздел: Автозапуск -->
+        <div class="settings-section" *ngIf="isWindows">
+          <h3 class="section-title">
+            <i class="fas fa-rocket"></i> Автозапуск
+          </h3>
+          
+          <div class="setting-item">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="autostart">
+              <span class="checkmark"></span>
+              <div class="setting-info">
+                <span class="setting-title">Запускать приложение вместе с Windows</span>
+                <span class="setting-description">
+                  Приложение будет автоматически запускаться при входе в систему
+                </span>
+              </div>
+            </label>
+            
+            <div class="setting-status" [class.active]="autostartStatus">
+              <i class="fas" [class.fa-check-circle]="autostartStatus" [class.fa-times-circle]="!autostartStatus"></i>
+              {{ autostartStatus ? 'Включено' : 'Выключено' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Раздел: Поведение -->
+        <div class="settings-section">
+          <h3 class="section-title">
+            <i class="fas fa-desktop"></i> Поведение приложения
+          </h3>
+          
+          <div class="setting-item">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="minimizeToTray">
+              <span class="checkmark"></span>
+              <div class="setting-info">
+                <span class="setting-title">Сворачивать в системный трей</span>
+                <span class="setting-description">
+                  При закрытии окна приложение сворачивается в трей вместо завершения
+                </span>
+              </div>
+            </label>
+          </div>
+          
+          <div class="setting-item">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="startupMinimized">
+              <span class="checkmark"></span>
+              <div class="setting-info">
+                <span class="setting-title">Запуск свернутым в трей</span>
+                <span class="setting-description">
+                  При запуске окно будет скрыто (работает в паре с автозапуском)
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Раздел: Внешний вид -->
+        <div class="settings-section">
+          <h3 class="section-title">
+            <i class="fas fa-palette"></i> Внешний вид
+          </h3>
+          
+          <div class="setting-item">
+            <label class="form-label">
+              <i class="fas fa-moon"></i> Тема оформления
+            </label>
+            
+            <div class="theme-selector">
+              <label class="theme-option" [class.active]="form.get('theme')?.value === 'dark'">
+                <input type="radio" formControlName="theme" value="dark" hidden>
+                <div class="theme-preview dark-theme">
+                  <div class="theme-header"></div>
+                  <div class="theme-content"></div>
+                </div>
+                <span class="theme-name">Темная</span>
+              </label>
+              
+              <label class="theme-option" [class.active]="form.get('theme')?.value === 'light'">
+                <input type="radio" formControlName="theme" value="light" hidden>
+                <div class="theme-preview light-theme">
+                  <div class="theme-header"></div>
+                  <div class="theme-content"></div>
+                </div>
+                <span class="theme-name">Светлая</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Раздел: Информация -->
+        <div class="settings-section">
+          <h3 class="section-title">
+            <i class="fas fa-info-circle"></i> Информация
+          </h3>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Версия приложения:</span>
+              <span class="info-value">1.0.0</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Electron версия:</span>
+              <span class="info-value">{{ window.__ELECTRON__?.version || 'Недоступно' }}</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Платформа:</span>
+              <span class="info-value">{{ isWindows ? 'Windows' : 'Другая' }}</span>
+            </div>
+            
+            <div class="info-item">
+              <span class="info-label">Режим:</span>
+              <span class="info-value">
+                {{ window.__ELECTRON__?.isElectron ? 'Electron' : 'Браузер' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="form.invalid || loading"
+          >
+            <i class="fas fa-save" [class.fa-spin]="loading"></i>
+            {{ loading ? 'Сохранение...' : 'Сохранить настройки' }}
+          </button>
+          
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="onCancel()"
+            [disabled]="loading"
+          >
+            <i class="fas fa-times"></i>
+            Отмена
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

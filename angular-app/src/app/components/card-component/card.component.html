@@ -1,0 +1,29 @@
+<div class="card" (click)="onPlay()">
+  <div class="card-image">
+    <img [src]="'file://' + item.posterPath" 
+         [alt]="item.title"
+         (error)="onImageError($event)"
+         loading="lazy">
+    
+    <div class="card-actions">
+      <button class="btn-icon edit-btn" (click)="onEdit($event)" title="Редактировать">
+        <i class="fas fa-edit"></i>
+      </button>
+      <button class="btn-icon delete-btn" (click)="onDelete($event)" title="Удалить">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </div>
+  
+  <div class="card-content">
+    <h3 class="card-title" [title]="item.title">{{ item.title }}</h3>
+    <div class="card-meta">
+      <span class="file-name" [title]="getFileName(item.playlistPath)">
+        {{ getFileName(item.playlistPath) }}
+      </span>
+      <span class="date" [title]="item.updatedAt | date:'medium'">
+        {{ item.updatedAt | date:'dd.MM.yyyy' }}
+      </span>
+    </div>
+  </div>
+</div>

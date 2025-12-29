@@ -1,0 +1,121 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-film"></i>
+        {{ item ? 'Редактировать' : 'Добавить' }} мультфильм
+      </h2>
+      <button class="btn-icon close-btn" (click)="onCancel()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-content">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <!-- Название -->
+        <div class="form-group">
+          <label for="title" class="form-label">
+            <i class="fas fa-heading"></i> Название *
+          </label>
+          <input 
+            id="title"
+            type="text" 
+            formControlName="title"
+            class="form-input"
+            placeholder="Введите название мультфильма"
+            [class.invalid]="title?.invalid && (title?.dirty || title?.touched)"
+          >
+          
+          <div *ngIf="title?.invalid && (title?.dirty || title?.touched)" class="error-messages">
+            <div *ngIf="title?.errors?.['required']" class="error">
+              Название обязательно
+            </div>
+            <div *ngIf="title?.errors?.['minlength']" class="error">
+              Минимум 2 символа
+            </div>
+            <div *ngIf="title?.errors?.['maxlength']" class="error">
+              Максимум 100 символов
+            </div>
+          </div>
+        </div>
+
+        <!-- Обложка -->
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-image"></i> Обложка *
+          </label>
+          <button 
+            type="button" 
+            class="btn btn-secondary file-btn"
+            (click)="selectPoster()"
+          >
+            <i class="fas fa-folder-open"></i>
+            {{ posterPath ? 'Изменить обложку' : 'Выбрать обложку' }}
+          </button>
+          
+          <div *ngIf="posterPath" class="file-info">
+            <div class="file-name">
+              <i class="fas fa-file-image"></i>
+              {{ getFileName(posterPath) }}
+            </div>
+            <div *ngIf="posterPath" class="file-preview">
+              <img [src]="'file://' + posterPath" (error)="$event.target.style.display='none'">
+            </div>
+          </div>
+          
+          <div *ngIf="!posterPath" class="file-info empty">
+            <i class="fas fa-exclamation-circle"></i>
+            Обложка не выбрана
+          </div>
+        </div>
+
+        <!-- Плейлист -->
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-list"></i> Плейлист *
+          </label>
+          <button 
+            type="button" 
+            class="btn btn-secondary file-btn"
+            (click)="selectPlaylist()"
+          >
+            <i class="fas fa-folder-open"></i>
+            {{ playlistPath ? 'Изменить плейлист' : 'Выбрать плейлист' }}
+          </button>
+          
+          <div *ngIf="playlistPath" class="file-info">
+            <div class="file-name">
+              <i class="fas fa-file-video"></i>
+              {{ getFileName(playlistPath) }}
+            </div>
+          </div>
+          
+          <div *ngIf="!playlistPath" class="file-info empty">
+            <i class="fas fa-exclamation-circle"></i>
+            Плейлист не выбран
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="form.invalid || !posterPath || !playlistPath"
+          >
+            <i class="fas fa-save"></i>
+            {{ item ? 'Сохранить изменения' : 'Добавить' }}
+          </button>
+          
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="onCancel()"
+          >
+            <i class="fas fa-times"></i>
+            Отмена
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

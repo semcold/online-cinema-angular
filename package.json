@@ -1,0 +1,60 @@
+{
+  "name": "online-cinema-angular",
+  "version": "2.0.0",
+  "description": "Домашний кинотеатр",
+  "main": "main.js",
+  "scripts": {
+    "ng": "cd angular-app && ng",
+    "start": "concurrently \"npm run ng:serve\" \"npm run electron:start\"",
+    "ng:serve": "cd angular-app && ng serve",
+    "electron:start": "wait-on http://localhost:4200 && electron .",
+    "build": "cd angular-app && ng build",
+    "build:prod": "cd angular-app && ng build --configuration production",
+    "electron:dev": "electron .",
+    "dist": "npm run build:prod && electron-builder",
+    "dist:dir": "npm run build:prod && electron-builder --dir",
+    "postinstall": "cd angular-app && npm install",
+    "package": "electron-packager . 'Домашний Кинотеатр' --platform=win32 --arch=x64 --out=dist --overwrite --asar.unpack=preload.js --asar.unpack=assets --icon=assets/icon.ico --ignore=angular-app/node_modules --ignore=angular-app/.angular"
+  },
+  "keywords": [
+    "electron",
+    "angular",
+    "мультфильмы",
+    "кинотеатр",
+    "online-cinema"
+  ],
+  "author": "SemCold",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-packager": "^17.1.2",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.onlinecinema.angular",
+    "productName": "Домашний Кинотеатр",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "package.json",
+      "angular-app/dist/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0"
+  }
+}
