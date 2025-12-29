@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { LibraryItem } from '../models/library-item.model';
 import { AppSettings } from '../models/settings.model';
 import { ElectronService } from '../services/electron.service';
@@ -32,7 +32,8 @@ export class AppComponent implements OnInit, OnDestroy {
   
   constructor(
     public electronService: ElectronService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   async ngOnInit() {
@@ -42,6 +43,7 @@ export class AppComponent implements OnInit, OnDestroy {
       // Загружаем начальные данные
       await this.loadLibrary();
       await this.loadSettings();
+      this.cdr.markForCheck();
       
       // Подписываемся на события Electron
       this.electronService.on('notification', (message: string, type: string) => {
@@ -62,6 +64,7 @@ export class AppComponent implements OnInit, OnDestroy {
     try {
       this.library = await this.electronService.getLibrary().toPromise() || [];
       this.library.sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+      this.cdr.detectChanges();
     } catch (error) {
       console.error('Ошибка загрузки библиотеки:', error);
       this.showNotification('Ошибка загрузки библиотеки', 'error');
@@ -71,6 +74,7 @@ export class AppComponent implements OnInit, OnDestroy {
   async loadSettings() {
     try {
       this.settings = await this.electronService.getSettings().toPromise() || this.settings;
+      this.cdr.detectChanges();
     } catch (error) {
       console.error('Ошибка загрузки настроек:', error);
     }
@@ -111,7 +115,12 @@ export class AppComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success) {
             this.library = response.data;
+            this.library.sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+            // Уведомляем Angular об изменении данных
+            this.cdr.detectChanges();
             this.showNotification('Мультфильм удален', 'success');
+          } else {
+            this.showNotification('Ошибка удаления', 'error');
           }
         },
         error: () => {
@@ -122,19 +131,29 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async onSaveItem(itemData: any) {
+    if (!itemData) return;
+    
     try {
       const response = await this.electronService.saveItem(itemData).toPromise();
       if (response && response.success) {
         this.library = response.data;
-        this.showAddModal = false;
-        this.editingItem = null;
+        this.library.sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+        // Уведомляем Angular об изменении данных
+        this.cdr.detectChanges();
         this.showNotification(
           itemData.id ? 'Изменения сохранены' : 'Мультфильм добавлен',
           'success'
         );
+      } else {
+        this.showNotification('Ошибка сохранения', 'error');
+        // Если ошибка, можно показать модал снова
+        this.showAddModal = true;
       }
     } catch (error) {
+      console.error('Ошибка сохранения:', error);
       this.showNotification('Ошибка сохранения', 'error');
+      // Если ошибка, можно показать модал снова
+      this.showAddModal = true;
     }
   }
 
@@ -149,14 +168,39 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async onSaveSettings(settings: AppSettings) {
-    const response = await this.electronService.saveSettings(settings).toPromise();
-    if (response && response.success) {
-      this.settings = settings;
-      this.showNotification('Настройки сохранены', 'success');
-      this.closeSettings();
-    } else {
-      this.showNotification('Ошибка сохранения настроек', 'error');
-    }
+    // Сначала применяем изменения в UI
+    const prevAutostart = this.settings?.autostart;
+    this.settings = settings;
+    this.cdr.detectChanges();
+    this.showNotification('Сохранение настроек...', 'info');
+    this.closeSettings();
+
+    // Выполняем сохранение и автозапуск асинхронно
+    (async () => {
+      try {
+        // Автозапуск: если изменился, применяем
+        if (this.electronService.isElectron && settings.autostart !== prevAutostart) {
+          const res = await this.electronService.setAutostart(settings.autostart).toPromise();
+          if (!res || !res.success) {
+            console.error('Ошибка настройки автозапуска:', res?.error);
+          }
+        }
+
+        if (this.electronService.isElectron) {
+          const resp = await this.electronService.saveSettings(settings).toPromise();
+          if (resp && resp.success) {
+            this.showNotification('Настройки сохранены', 'success');
+          } else {
+            this.showNotification('Ошибка сохранения настроек', 'error');
+          }
+        } else {
+          this.showNotification('Настройки сохранены', 'success');
+        }
+      } catch (error) {
+        console.error('Ошибка при сохранении настроек:', error);
+        this.showNotification('Ошибка сохранения настроек', 'error');
+      }
+    })();
   }
 
   showNotification(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') {

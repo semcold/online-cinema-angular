@@ -100,14 +100,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.85);
+  background: var(--card-action-bg);
   border: 1px solid var(--border-color);
-  color: var(--text-primary);
+  color: var(--card-action-color);
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background: rgba(30, 41, 59, 0.95);
+    background: var(--card-action-hover);
     
     &.edit-btn {
       color: var(--accent-color);

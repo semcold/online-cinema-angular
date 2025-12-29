@@ -53,32 +53,11 @@ export class SettingsModalComponent implements OnInit {
     if (this.form.invalid) return;
 
     const settings = this.form.value as AppSettings;
-    
-    if (this.electronService.isElectron) {
-      this.loading = true;
-      try {
-        // Сохраняем автозапуск
-        if (settings.autostart !== this.autostartStatus) {
-          const result = await this.electronService.setAutostart(settings.autostart).toPromise();
-          if (result && !result.success) {
-            console.error('Ошибка настройки автозапуска:', result.error);
-          } else {
-            this.autostartStatus = settings.autostart;
-          }
-        }
-
-        // Сохраняем остальные настройки
-        await this.electronService.saveSettings(settings).toPromise();
-        
-        this.save.emit(settings);
-      } catch (error) {
-        console.error('Ошибка сохранения настроек:', error);
-      } finally {
-        this.loading = false;
-      }
-    } else {
-      this.save.emit(settings);
-    }
+    // Блокируем кнопку и закрываем модал немедленно.
+    this.loading = true;
+    this.close.emit();
+    // Отправляем настройки наверх — сохранение и автозапуск обрабатываются в app.component
+    this.save.emit(settings);
   }
 
   onCancel() {

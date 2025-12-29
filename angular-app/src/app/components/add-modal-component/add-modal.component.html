@@ -11,19 +11,21 @@
     </div>
 
     <div class="modal-content">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" (click)="ensureInputFocus()">
         <!-- Название -->
         <div class="form-group">
           <label for="title" class="form-label">
             <i class="fas fa-heading"></i> Название *
           </label>
           <input 
+            #titleInput
             id="title"
             type="text" 
             formControlName="title"
             class="form-input"
             placeholder="Введите название мультфильма"
             [class.invalid]="title?.invalid && (title?.dirty || title?.touched)"
+            autofocus
           >
           
           <div *ngIf="title?.invalid && (title?.dirty || title?.touched)" class="error-messages">
@@ -100,16 +102,17 @@
           <button 
             type="submit" 
             class="btn btn-primary"
-            [disabled]="form.invalid || !posterPath || !playlistPath"
+            [disabled]="form.invalid || !posterPath || !playlistPath || isSaving"
           >
-            <i class="fas fa-save"></i>
-            {{ item ? 'Сохранить изменения' : 'Добавить' }}
+            <i class="fas" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+            {{ isSaving ? 'Сохранение...' : (item ? 'Сохранить изменения' : 'Добавить') }}
           </button>
           
           <button 
             type="button" 
             class="btn btn-secondary"
             (click)="onCancel()"
+            [disabled]="isSaving"
           >
             <i class="fas fa-times"></i>
             Отмена

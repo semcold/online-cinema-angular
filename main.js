@@ -5,7 +5,15 @@ const crypto = require('crypto');
 
 // Определяем пути в зависимости от режима
 const isDev = process.env.NODE_ENV === 'development' || 
-              process.argv.some(arg => arg.includes('--dev'));
+              process.argv.some(arg => arg.includes('--dev')) ||
+              !fs.existsSync(path.join(__dirname, 'angular-app', 'dist', 'angular-app', 'index.html')) &&
+              !fs.existsSync(path.join(__dirname, 'angular-app', 'dist', 'angular-app', 'browser', 'index.html'));
+
+console.log('=== Режим запуска ===');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('процесс.argv:', process.argv);
+console.log('isDev:', isDev);
+console.log('====================');
 
 // Пути к файлам
 let assetsPath, preloadPath, indexPath, dbPath, settingsPath;
@@ -63,12 +71,12 @@ let tray = null;
 
 function readDB() {
   try {
-    if (!fs.existsSync(DB_PATH)) {
+    if (!fs.existsSync(dbPath)) {
       const defaultData = [];
-      fs.writeFileSync(DB_PATH, JSON.stringify(defaultData, null, 2));
+      fs.writeFileSync(dbPath, JSON.stringify(defaultData, null, 2));
       return defaultData;
     }
-    const data = fs.readFileSync(DB_PATH, 'utf-8');
+    const data = fs.readFileSync(dbPath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
     console.error('Ошибка чтения БД:', error);
@@ -78,11 +86,11 @@ function readDB() {
 
 function writeDB(data) {
   try {
-    const dir = path.dirname(DB_PATH);
+    const dir = path.dirname(dbPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
     return true;
   } catch (error) {
     console.error('Ошибка записи БД:', error);
@@ -92,8 +100,8 @@ function writeDB(data) {
 
 function loadSettings() {
   try {
-    if (fs.existsSync(SETTINGS_PATH)) {
-      const data = fs.readFileSync(SETTINGS_PATH, 'utf-8');
+    if (fs.existsSync(settingsPath)) {
+      const data = fs.readFileSync(settingsPath, 'utf-8');
       return { ...DEFAULT_SETTINGS, ...JSON.parse(data) };
     }
   } catch (error) {
@@ -104,7 +112,7 @@ function loadSettings() {
 
 function saveSettings(settings) {
   try {
-    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2));
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
     return true;
   } catch (error) {
     console.error('Ошибка сохранения настроек:', error);
@@ -302,6 +310,7 @@ ipcMain.handle('get-library', () => {
 });
 
 ipcMain.handle('save-item', (event, item) => {
+  console.log('Сохранение элемента:', item);
   const db = readDB();
   
   if (item.id) {
@@ -333,13 +342,16 @@ ipcMain.handle('save-item', (event, item) => {
   db.sort((a, b) => a.title.localeCompare(b.title, 'ru'));
   
   const success = writeDB(db);
+  console.log('Результат сохранения:', { success, count: db.length });
   return { success, data: db };
 });
 
 ipcMain.handle('delete-item', (event, id) => {
+  console.log('Удаление элемента:', id);
   const db = readDB();
   const filtered = db.filter(item => item.id !== id);
   const success = writeDB(filtered);
+  console.log('Результат удаления:', { success, count: filtered.length });
   return { success, data: filtered };
 });
 

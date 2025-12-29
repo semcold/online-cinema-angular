@@ -1,4 +1,5 @@
 .modal-overlay {
+  pointer-events: none;
   position: fixed;
   top: 0;
   left: 0;
@@ -9,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10050;
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -213,6 +214,7 @@
 
 @media (max-width: 640px) {
   .modal-container {
+  pointer-events: auto;
     width: 95%;
     margin: 0 10px;
   }
