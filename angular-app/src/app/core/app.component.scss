@@ -198,3 +198,28 @@
     }
   }
 }
+
+/* Confirm overlay */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 12010;
+}
+.confirm-box {
+  background: var(--bg-secondary);
+  padding: 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  min-width: 320px;
+}
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}

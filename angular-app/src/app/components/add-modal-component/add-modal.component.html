@@ -1,5 +1,5 @@
-<div class="modal-overlay" (click)="onCancel()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+<div class="modal-overlay">
+  <div class="modal-container">
     <div class="modal-header">
       <h2 class="modal-title">
         <i class="fas fa-film"></i>
@@ -27,11 +27,12 @@
             [class.invalid]="title?.invalid && (title?.dirty || title?.touched)"
             autofocus
           >
-          
-          
           <div *ngIf="title?.invalid && (title?.dirty || title?.touched)" class="error-messages">
             <div *ngIf="title?.errors?.['required']" class="error">
               Название обязательно
+            </div>
+            <div *ngIf="title?.errors?.['whitespace']" class="error">
+              Название не может быть пустым или состоять только из пробелов
             </div>
             <div *ngIf="title?.errors?.['minlength']" class="error">
               Минимум 2 символа

@@ -1,8 +1,7 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, AfterViewInit, ViewChild, ElementRef, NgZone, ChangeDetectorRef, OnChanges, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, AfterViewInit, ViewChild, ElementRef, NgZone, ChangeDetectorRef } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, Validators, AbstractControl, ValidatorFn } from '@angular/forms';
 import { ElectronService } from '../../services/electron.service';
 import { LibraryItem } from '../../models/library-item.model';
-import { Subscription } from 'rxjs';
 import { COMMON_IMPORTS } from '../../core/imports';
 
 interface AddModalForm {	
@@ -16,7 +15,7 @@ interface AddModalForm {
   standalone: true,
   imports: [COMMON_IMPORTS]
 })
-export class AddModalComponent implements OnInit, OnDestroy {
+export class AddModalComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() item: LibraryItem | null = null;
   @Output() save = new EventEmitter<any>();
   @Output() close = new EventEmitter<void>();
@@ -26,8 +25,6 @@ export class AddModalComponent implements OnInit, OnDestroy {
   playlistPath: string | null = null;
   isSaving = false;
   @ViewChild('titleInput') titleInput!: ElementRef<HTMLInputElement>;
-  private subscriptions = new Subscription();
-  
 
   constructor(
     private fb: FormBuilder,
@@ -36,13 +33,21 @@ export class AddModalComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({
-      title: new FormControl<string>('', [Validators.minLength(2), Validators.maxLength(100)])
+      title: new FormControl<string>('', [Validators.minLength(2), Validators.maxLength(100), this.whitespaceValidator()])
     });    
   }
 
+  ngAfterViewInit() {
+    // Ensure focus on input field after view initialization
+    if (this.titleInput) {
+      this.zone.run(() => {
+        this.titleInput.nativeElement.focus();
+        this.cdr.detectChanges();
+      });
+    }
+  }
 
   ngOnInit() {
-    console.log(this.item);    
     this.isSaving = false;   
 
     if (this.item) {
@@ -51,17 +56,13 @@ export class AddModalComponent implements OnInit, OnDestroy {
       });
       this.posterPath = this.item.posterPath;
       this.playlistPath = this.item.playlistPath;
-    } else {      
-      this.form.patchValue({
-        title: ' '
-      });
+    } else {  
       this.posterPath = null;
       this.playlistPath = null;
     }
   }
 
   ngOnDestroy() {
-    this.subscriptions.unsubscribe();
   }
 
   async selectPoster() {
@@ -73,7 +74,6 @@ export class AddModalComponent implements OnInit, OnDestroy {
         this.zone.run(() => {
           this.posterPath = path;
           this.cdr.detectChanges();
-          //this.focusTitle();
         });
       }
     } catch (error) {
@@ -90,7 +90,6 @@ export class AddModalComponent implements OnInit, OnDestroy {
         this.zone.run(() => {
           this.playlistPath = path;
           this.cdr.detectChanges();
-          //this.focusTitle();
         });
       }
     } catch (error) {
@@ -99,18 +98,22 @@ export class AddModalComponent implements OnInit, OnDestroy {
   }
 
   onSubmit() {
-    // if (this.form.invalid || !this.posterPath || !this.playlistPath) {
-    //   this.markFormGroupTouched(this.form);
-    //   return;
-    // }
+    // Validate form and required files
+    if (this.form.invalid || !this.posterPath || !this.playlistPath) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     // Отключаем кнопку и отправляем данные
-    console.log('[AddModal] onSubmit called');
     this.isSaving = true;
     
+    // Trim title to remove accidental leading/trailing spaces
+    const rawTitle = this.form.get('title')?.value || '';
+    const title = (rawTitle as string).trim();
+
     const itemData = {
       id: this.item?.id,
-      title: this.form.get('title')?.value?.trim(),
+      title,
       posterPath: this.posterPath!,
       playlistPath: this.playlistPath!
     };
@@ -123,12 +126,11 @@ export class AddModalComponent implements OnInit, OnDestroy {
   }
 
   onCancel() {
-    console.log('[AddModal] onCancel called');
     this.isSaving = false;
     this.close.emit();
   }
   ensureInputFocus() {
-    console.log('я тут');
+    // Lightweight change detection trigger to reflect file selection
     this.cdr.detectChanges();
   } 
 
@@ -139,14 +141,15 @@ export class AddModalComponent implements OnInit, OnDestroy {
     return filename.length > 30 ? filename.substring(0, 30) + '...' : filename;
   }
 
-  // private markFormGroupTouched(formGroup: FormGroup) {
-  //   Object.values(formGroup.controls).forEach(control => {
-  //     control.markAsTouched();
-  //     if (control instanceof FormGroup) {
-  //       this.markFormGroupTouched(control);
-  //     }
-  //   });
-  // }
+  // Validator: disallow values that are only whitespace
+  private whitespaceValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const v = control.value as string | null;
+      if (v == null) return null;
+      if (v.trim().length === 0) return { whitespace: true };
+      return null;
+    };
+  }
 
   get title() {
     return this.form.get('title');

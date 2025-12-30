@@ -1,5 +1,5 @@
 .modal-overlay {
-  pointer-events: none;
+  pointer-events: auto;
   position: fixed;
   top: 0;
   left: 0;
@@ -15,6 +15,7 @@
 }
 
 .modal-container {
+  pointer-events: auto;
   background: var(--bg-secondary);
   border-radius: 16px;
   width: 90%;

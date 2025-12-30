@@ -109,25 +109,37 @@ export class AppComponent implements OnInit, OnDestroy {
     this.openAddModal(item);
   }
 
+  // Non-blocking delete: show confirm UI instead of native confirm()
+  confirmDeleteItem: LibraryItem | null = null;
+
   deleteItem(item: LibraryItem) {
-    if (confirm(`Удалить "${item.title}"?`)) {
-      this.electronService.deleteItem(item.id).subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.library = response.data;
-            this.library.sort((a, b) => a.title.localeCompare(b.title, 'ru'));
-            // Уведомляем Angular об изменении данных
-            this.cdr.detectChanges();
-            this.showNotification('Мультфильм удален', 'success');
-          } else {
-            this.showNotification('Ошибка удаления', 'error');
-          }
-        },
-        error: () => {
+    this.confirmDeleteItem = item;
+  }
+
+  async confirmDeleteCancel() {
+    this.confirmDeleteItem = null;
+  }
+
+  async confirmDeleteAccept() {
+    const item = this.confirmDeleteItem;
+    this.confirmDeleteItem = null;
+    if (!item) return;
+
+    this.electronService.deleteItem(item.id).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.library = response.data;
+          this.library.sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+          this.cdr.detectChanges();
+          this.showNotification('Мультфильм удален', 'success');
+        } else {
           this.showNotification('Ошибка удаления', 'error');
         }
-      });
-    }
+      },
+      error: () => {
+        this.showNotification('Ошибка удаления', 'error');
+      }
+    });
   }
 
   async onSaveItem(itemData: any) {

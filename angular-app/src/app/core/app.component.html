@@ -81,6 +81,17 @@
     (close)="closeSettings()">
   </app-settings-modal>
   
+  <!-- Non-blocking confirm dialog for delete -->
+  <div class="confirm-overlay" *ngIf="confirmDeleteItem">
+    <div class="confirm-box">
+      <p>Удалить "{{ confirmDeleteItem.title }}"?</p>
+      <div class="confirm-actions">
+        <button class="btn btn-secondary" (click)="confirmDeleteCancel()">Отмена</button>
+        <button class="btn btn-primary" (click)="confirmDeleteAccept()">Удалить</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Уведомления -->
   <app-notification></app-notification>
 </div>
