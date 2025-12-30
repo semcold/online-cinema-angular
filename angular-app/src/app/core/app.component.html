@@ -65,12 +65,14 @@
   </main>
   
   <!-- Модальные окна -->
-  <app-add-modal 
-    *ngIf="showAddModal"
-    [item]="editingItem"
-    (save)="onSaveItem($event)"
-    (close)="onCloseAddModal()">
-  </app-add-modal>
+  @if (showAddModal) {
+    <app-add-modal     
+      [item]="editingItem"
+      (save)="onSaveItem($event)"
+      (close)="onCloseAddModal()">
+    </app-add-modal>
+  }
+  
   
   <app-settings-modal 
     *ngIf="showSettingsModal"

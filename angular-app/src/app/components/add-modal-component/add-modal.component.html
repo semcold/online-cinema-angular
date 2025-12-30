@@ -11,7 +11,7 @@
     </div>
 
     <div class="modal-content">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" (click)="ensureInputFocus()">
+      <form [formGroup]="form" (click)="ensureInputFocus()">
         <!-- Название -->
         <div class="form-group">
           <label for="title" class="form-label">
@@ -27,6 +27,7 @@
             [class.invalid]="title?.invalid && (title?.dirty || title?.touched)"
             autofocus
           >
+          
           
           <div *ngIf="title?.invalid && (title?.dirty || title?.touched)" class="error-messages">
             <div *ngIf="title?.errors?.['required']" class="error">
@@ -103,6 +104,7 @@
             type="submit" 
             class="btn btn-primary"
             [disabled]="form.invalid || !posterPath || !playlistPath || isSaving"
+            (click)="onSubmit()"
           >
             <i class="fas" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
             {{ isSaving ? 'Сохранение...' : (item ? 'Сохранить изменения' : 'Добавить') }}

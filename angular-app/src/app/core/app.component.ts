@@ -105,7 +105,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.editingItem = null;
   }
 
-  editItem(item: LibraryItem) {
+  editItem(item: LibraryItem) {    
     this.openAddModal(item);
   }
 
