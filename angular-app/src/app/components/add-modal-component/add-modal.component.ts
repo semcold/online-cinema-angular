@@ -17,6 +17,7 @@ interface AddModalForm {
 })
 export class AddModalComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() item: LibraryItem | null = null;
+  @Input() currentCategoryId: string | null = null;
   @Output() save = new EventEmitter<any>();
   @Output() close = new EventEmitter<void>();
 
@@ -115,7 +116,8 @@ export class AddModalComponent implements OnInit, OnDestroy, AfterViewInit {
       id: this.item?.id,
       title,
       posterPath: this.posterPath!,
-      playlistPath: this.playlistPath!
+      playlistPath: this.playlistPath!,
+      categoryId: this.item?.categoryId ?? this.currentCategoryId ?? null
     };
 
     // Сразу закрываем модал

@@ -45,6 +45,13 @@
     i {
       color: var(--accent-color);
     }
+
+    .current-category {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-left: 8px;
+      font-weight: 500;
+    }
   }
 
   .window-controls {
@@ -75,6 +82,49 @@
       }
     }
   }
+
+  /* Поисковая строка в хедере */
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .search-input {
+      width: 220px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-primary);
+      outline: none;
+      font-size: 14px;
+
+      &::placeholder { color: var(--text-secondary); }
+
+      &:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.06);
+      }
+    }
+
+    .clear-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+
+      &:hover {
+        background: var(--bg-hover);
+        color: var(--text-primary);
+      }
+    }
+  }
 }
 
 // Main content
@@ -82,6 +132,74 @@
   flex: 1;
   overflow: hidden;
   position: relative;
+
+  .columns {
+    display: flex;
+    height: 100%;
+
+    .sidebar {
+      width: 280px;
+      border-right: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      padding: 16px;
+      box-sizing: border-box;
+      overflow-y: auto;
+
+      .sidebar-header {
+        margin-bottom: 12px;
+      }
+
+      .category-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .category-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text-primary);
+
+        &.active {
+          background: rgba(59,130,246,0.08);
+          border: 1px solid rgba(59,130,246,0.15);
+        }
+
+        .cat-title {
+          font-size: 14px;
+        }
+
+        .btn-icon.small {
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+        }
+      }
+
+      .add-category {
+        margin-top: 12px;
+        margin-bottom: 12px;
+        display: flex;
+        gap: 8px;
+
+        input.form-input {
+          flex: 1;
+          padding: 6px 8px;
+          border-radius: 6px;
+        }
+      }
+    }
+
+    .main-content {
+      flex: 1;
+      overflow: auto;
+      padding: 24px;
+    }
+  }
 }
 
 // Library grid

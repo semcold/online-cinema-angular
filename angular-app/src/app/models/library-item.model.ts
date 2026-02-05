@@ -3,6 +3,7 @@ export interface LibraryItem {
   title: string;
   posterPath: string;
   playlistPath: string;
+  categoryId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -12,6 +13,7 @@ export interface SaveItemRequest {
   title: string;
   posterPath: string;
   playlistPath: string;
+  categoryId?: string | null;
 }
 
 export interface SaveItemResponse {

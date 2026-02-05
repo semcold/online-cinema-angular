@@ -5,14 +5,28 @@
       <h1 class="app-title">
         <i class="fas fa-film"></i>
         {{ title }}
+        <span *ngIf="selectedCategoryId" class="current-category">— {{ currentCategoryTitle }}</span>
       </h1>
       
-      <div class="library-stats" *ngIf="library.length > 0">
+      <!-- <div class="library-stats" *ngIf="library.length > 0">
         {{ library.length }} {{ library.length | i18nPlural: {'=0': 'мультфильмов', '=1': 'мультфильм', 'other': 'мультфильма'} }}
-      </div>
+      </div> -->
     </div>
     
     <div class="header-right">
+      <!-- Строка поиска -->
+      <div class="search">
+        <input
+          class="search-input"
+          type="text"
+          placeholder="Поиск по названию..."
+          [(ngModel)]="searchQuery"
+          aria-label="Поиск по названию" />
+        <button *ngIf="searchQuery" class="btn-icon clear-btn" (click)="clearSearch()" title="Очистить поиск" aria-label="Очистить поиск">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
       <!-- Кнопка добавления -->
       <button class="btn btn-primary" (click)="openAddModal()" title="Добавить мультфильм">
         <i class="fas fa-plus"></i>
@@ -41,26 +55,67 @@
   
   <!-- Main Content -->
   <main class="app-main">
-    <div class="library-container">
-      <div *ngIf="library.length > 0" class="library-grid">
-        <app-card 
-          *ngFor="let item of library"
-          [item]="item"
-          (play)="playItem($event)"
-          (edit)="editItem($event)"
-          (delete)="deleteItem($event)">
-        </app-card>
-      </div>
-      
-      <div *ngIf="library.length === 0" class="empty-state">
-        <i class="fas fa-film"></i>
-        <h3>Библиотека пуста</h3>
-        <p>Добавьте свой первый мультфильм, чтобы начать просмотр</p>
-        <button class="btn btn-primary" (click)="openAddModal()">
-          <i class="fas fa-plus"></i>
-          Добавить первый мультфильм
-        </button>
-      </div>
+    <div class="columns">
+      <!-- Categories (left) -->
+      <aside class="sidebar">
+        <!-- <div class="sidebar-header">
+          <h4>Категории</h4>
+        </div> -->
+        <div class="add-category">
+          <input type="text" [(ngModel)]="_newCategoryTitle" placeholder="Новая категория" class="form-input" />
+          <button class="btn btn-primary" (click)="addCategory(_newCategoryTitle); _newCategoryTitle='';">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+
+        <div class="category-list">
+          <div
+            *ngFor="let cat of categories"
+            class="category-item"
+            [class.active]="selectedCategoryId === cat.id"
+            (click)="selectCategory(cat)">
+            <span class="cat-title">{{ cat.title }}</span>
+            <button class="btn-icon small" title="Удалить" (click)="confirmDeleteCategoryItem(cat); $event.stopPropagation();">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        
+      </aside>
+
+      <!-- Library (right) -->
+      <section class="main-content">
+        <div class="library-container">
+          <div *ngIf="library.length > 0">
+            <div *ngIf="filteredLibrary.length > 0" class="library-grid">
+              <app-card 
+                *ngFor="let item of filteredLibrary"
+                [item]="item"
+                (play)="playItem($event)"
+                (edit)="editItem($event)"
+                (delete)="deleteItem($event)">
+              </app-card>
+            </div>
+
+            <div *ngIf="filteredLibrary.length === 0" class="empty-state">
+              <i class="fas fa-search"></i>
+              <h3>Ничего не найдено</h3>
+              <p>По запросу "{{ searchQuery }}" ничего не найдено</p>
+            </div>
+          </div>
+          
+          <div *ngIf="library.length === 0" class="empty-state">
+            <i class="fas fa-film"></i>
+            <h3>Библиотека пуста</h3>
+            <p>Добавьте свой первый мультфильм, чтобы начать просмотр</p>
+            <button class="btn btn-primary" (click)="openAddModal()">
+              <i class="fas fa-plus"></i>
+              Добавить первый мультфильм
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   </main>
   
@@ -68,6 +123,7 @@
   @if (showAddModal) {
     <app-add-modal     
       [item]="editingItem"
+      [currentCategoryId]="selectedCategoryId"
       (save)="onSaveItem($event)"
       (close)="onCloseAddModal()">
     </app-add-modal>
@@ -88,6 +144,17 @@
       <div class="confirm-actions">
         <button class="btn btn-secondary" (click)="confirmDeleteCancel()">Отмена</button>
         <button class="btn btn-primary" (click)="confirmDeleteAccept()">Удалить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm delete category -->
+  <div class="confirm-overlay" *ngIf="confirmDeleteCategory">
+    <div class="confirm-box">
+      <p>Удалить категорию "{{ confirmDeleteCategory.title }}"? Элементы будут перемещены в без категории.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-secondary" (click)="confirmDeleteCategoryCancel()">Отмена</button>
+        <button class="btn btn-primary" (click)="confirmDeleteCategoryAccept()">Удалить</button>
       </div>
     </div>
   </div>

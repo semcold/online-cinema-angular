@@ -98,6 +98,46 @@ function writeDB(data) {
   }
 }
 
+// Categories: stored separately to keep concerns separated
+const categoriesPath = path.join(path.dirname(dbPath), 'categories.json');
+
+function readCategories() {
+  try {
+    if (!fs.existsSync(categoriesPath)) {
+      // Create default category
+      const defaultCats = [
+        {
+          id: 'default',
+          title: 'Мультфильмы',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+      fs.writeFileSync(categoriesPath, JSON.stringify(defaultCats, null, 2));
+      return defaultCats;
+    }
+    const data = fs.readFileSync(categoriesPath, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Ошибка чтения categories:', error);
+    return [];
+  }
+}
+
+function writeCategories(data) {
+  try {
+    const dir = path.dirname(categoriesPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(categoriesPath, JSON.stringify(data, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Ошибка записи categories:', error);
+    return false;
+  }
+}
+
 function loadSettings() {
   try {
     if (fs.existsSync(settingsPath)) {
@@ -309,6 +349,48 @@ ipcMain.handle('get-library', () => {
   return readDB();
 });
 
+// Categories API
+ipcMain.handle('get-categories', () => {
+  return readCategories();
+});
+
+ipcMain.handle('save-category', (event, cat) => {
+  const cats = readCategories();
+  if (cat.id) {
+    const idx = cats.findIndex(c => c.id === cat.id);
+    if (idx !== -1) {
+      cats[idx] = { ...cats[idx], title: cat.title, updatedAt: new Date().toISOString() };
+    }
+  } else {
+    const newCat = {
+      id: crypto.randomUUID(),
+      title: cat.title,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    cats.push(newCat);
+  }
+
+  cats.sort((a,b) => a.title.localeCompare(b.title, 'ru'));
+  const success = writeCategories(cats);
+  return { success, data: cats };
+});
+
+ipcMain.handle('delete-category', (event, id) => {
+  const cats = readCategories();
+  const remaining = cats.filter(c => c.id !== id);
+  const success = writeCategories(remaining);
+
+  // Reassign items in DB to null category (or to 'default' if you prefer)
+  if (success) {
+    const db = readDB();
+    const updated = db.map(item => item.categoryId === id ? { ...item, categoryId: null } : item);
+    writeDB(updated);
+  }
+
+  return { success, data: remaining };
+});
+
 ipcMain.handle('save-item', (event, item) => {
   console.log('Сохранение элемента:', item);
   const db = readDB();
@@ -322,6 +404,7 @@ ipcMain.handle('save-item', (event, item) => {
         title: item.title,
         posterPath: item.posterPath,
         playlistPath: item.playlistPath,
+        categoryId: item.categoryId ?? null,
         updatedAt: new Date().toISOString()
       };
     }
@@ -332,6 +415,7 @@ ipcMain.handle('save-item', (event, item) => {
       title: item.title,
       posterPath: item.posterPath,
       playlistPath: item.playlistPath,
+      categoryId: item.categoryId ?? null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

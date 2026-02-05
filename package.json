@@ -7,7 +7,7 @@
     "ng": "cd angular-app && ng",
     "start": "concurrently \"npm run ng:serve\" \"npm run electron:start\"",
     "ng:serve": "cd angular-app && ng serve",
-    "electron:start": "wait-on http://localhost:4200 && electron .",
+    "electron:start": "wait-on http://localhost:4200 && electron . --dev",
     "build": "cd angular-app && ng build",
     "build:prod": "cd angular-app && ng build --configuration production",
     "electron:dev": "electron .",

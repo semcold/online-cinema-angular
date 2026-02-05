@@ -22,6 +22,10 @@ declare global {
       closeWindow: () => Promise<boolean>;
       on: (channel: string, callback: Function) => void;
       off: (channel: string, callback: Function) => void;
+      // Categories
+      getCategories: () => Promise<any[]>;
+      saveCategory: (cat: { id?: string; title: string }) => Promise<{ success: boolean; data: any[] }>;
+      deleteCategory: (id: string) => Promise<{ success: boolean; data: any[] }>;
     };
     __ELECTRON__: {
       isElectron: boolean;
@@ -54,6 +58,19 @@ export class ElectronService {
 
   deleteItem(id: string): Observable<SaveItemResponse> {
     return from(window.electronAPI.deleteItem(id));
+  }
+
+  // Categories
+  getCategories(): Observable<any[]> {
+    return from(window.electronAPI.getCategories());
+  }
+
+  saveCategory(cat: { id?: string; title: string }) {
+    return from(window.electronAPI.saveCategory(cat));
+  }
+
+  deleteCategory(id: string) {
+    return from(window.electronAPI.deleteCategory(id));
   }
 
   // Файлы

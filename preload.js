@@ -31,6 +31,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
   setAutostart: (enabled) => ipcRenderer.invoke('set-autostart', enabled),
   getAutostartStatus: () => ipcRenderer.invoke('get-autostart-status'),
+
+  // Categories
+  getCategories: () => ipcRenderer.invoke('get-categories'),
+  saveCategory: (cat) => ipcRenderer.invoke('save-category', cat),
+  deleteCategory: (id) => ipcRenderer.invoke('delete-category', id),
   
   // Управление окном
   minimizeWindow: () => ipcRenderer.invoke('minimize-window'),

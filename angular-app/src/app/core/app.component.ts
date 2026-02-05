@@ -19,6 +19,9 @@ import { AddModalComponent } from '../components/add-modal-component/add-modal.c
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Домашний Кинотеатр';
   library: LibraryItem[] = [];
+  categories: any[] = [];
+  selectedCategoryId: string | null = null;
+  searchQuery: string = '';
   settings: AppSettings = {
     autostart: false,
     minimizeToTray: true,
@@ -29,6 +32,12 @@ export class AppComponent implements OnInit, OnDestroy {
   showAddModal = false;
   showSettingsModal = false;
   editingItem: LibraryItem | null = null;
+
+  // Confirm delete category
+  confirmDeleteCategory: any | null = null;
+
+  // temporary input model for new category
+  _newCategoryTitle: string = '';
   
   constructor(
     public electronService: ElectronService,
@@ -41,6 +50,7 @@ export class AppComponent implements OnInit, OnDestroy {
       console.log('Running in Electron:', this.electronService.platform);
       
       // Загружаем начальные данные
+      await this.loadCategories();
       await this.loadLibrary();
       await this.loadSettings();
       this.cdr.markForCheck();
@@ -51,6 +61,8 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     } else {
       console.log('Running in browser');
+      // In browser mode also try to load categories for dev usability
+      await this.loadCategories();
     }
   }
 
@@ -68,6 +80,29 @@ export class AppComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Ошибка загрузки библиотеки:', error);
       this.showNotification('Ошибка загрузки библиотеки', 'error');
+    }
+  }
+
+  async loadCategories() {
+    try {
+      if (!this.electronService.isElectron) {
+        // In browser mode provide a default category for development
+        this.categories = [{ id: 'default', title: 'Мультфильмы', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }];
+      } else {
+        this.categories = await this.electronService.getCategories().toPromise() || [];
+      }
+
+      // Ensure there's at least a default category
+      if (!this.selectedCategoryId && this.categories.length > 0) {
+        const found = this.categories.find(c => c.id === this.selectedCategoryId);
+        if (!found) {
+          this.selectedCategoryId = this.categories[0].id;
+        }
+      }
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Ошибка загрузки категорий:', error);
+      this.showNotification('Ошибка загрузки категорий', 'error');
     }
   }
 
@@ -109,6 +144,87 @@ export class AppComponent implements OnInit, OnDestroy {
     this.openAddModal(item);
   }
 
+  selectCategory(cat: any) {
+    this.selectedCategoryId = cat?.id ?? null;
+    this.cdr.detectChanges();
+  }
+
+  async addCategory(title: string) {
+    if (!title || title.trim().length < 1) return;
+    const t = title.trim();
+    try {
+      if (!this.electronService.isElectron) {
+        // Local behavior for browser/dev mode
+        const newCat = { id: this.genId(), title: t, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        this.categories.push(newCat);
+        this.selectedCategoryId = newCat.id;
+        this.showNotification('Категория добавлена (локально)', 'success');
+        this.cdr.detectChanges();
+        return;
+      }
+
+      const resp: any = await this.electronService.saveCategory({ title: t }).toPromise();
+      if (resp && resp.success) {
+        this.categories = resp.data;
+        // select newly added
+        const newCat = this.categories.find((c: any) => c.title === t);
+        if (newCat) this.selectedCategoryId = newCat.id;
+        this.showNotification('Категория добавлена', 'success');
+        this.cdr.detectChanges();
+      } else {
+        this.showNotification('Ошибка при добавлении категории', 'error');
+      }
+    } catch (error) {
+      console.error('Ошибка добавления категории:', error);
+      this.showNotification('Ошибка при добавлении категории', 'error');
+    }
+  }
+
+  confirmDeleteCategoryItem(cat: any) {
+    this.confirmDeleteCategory = cat;
+  }
+
+  async confirmDeleteCategoryCancel() {
+    this.confirmDeleteCategory = null;
+  }
+
+  async confirmDeleteCategoryAccept() {
+    const cat = this.confirmDeleteCategory;
+    this.confirmDeleteCategory = null;
+    if (!cat) return;
+
+    try {
+      if (!this.electronService.isElectron) {
+        // local behavior: remove and reassign
+        this.categories = this.categories.filter(c => c.id !== cat.id);
+        if (this.selectedCategoryId === cat.id) {
+          this.selectedCategoryId = this.categories.length ? this.categories[0].id : null;
+        }
+        this.library = this.library.map(i => i.categoryId === cat.id ? { ...i, categoryId: null } : i);
+        this.showNotification('Категория удалена (локально)', 'success');
+        this.cdr.detectChanges();
+        return;
+      }
+
+      const resp: any = await this.electronService.deleteCategory(cat.id).toPromise();
+      if (resp && resp.success) {
+        this.categories = resp.data;
+        // If deleted category was selected, pick first
+        if (this.selectedCategoryId === cat.id) {
+          this.selectedCategoryId = this.categories.length ? this.categories[0].id : null;
+        }
+        // reload library to get reassigned items
+        await this.loadLibrary();
+        this.showNotification('Категория удалена', 'success');
+      } else {
+        this.showNotification('Ошибка удаления категории', 'error');
+      }
+    } catch (error) {
+      console.error('Ошибка удаления категории:', error);
+      this.showNotification('Ошибка удаления категории', 'error');
+    }
+  }
+
   // Non-blocking delete: show confirm UI instead of native confirm()
   confirmDeleteItem: LibraryItem | null = null;
 
@@ -144,6 +260,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async onSaveItem(itemData: any) {
     if (!itemData) return;
+
+    // Ensure category assignment from current selection when not provided
+    if (typeof itemData.categoryId === 'undefined' || itemData.categoryId === null) {
+      itemData.categoryId = this.selectedCategoryId ?? null;
+    }
     
     try {
       const response = await this.electronService.saveItem(itemData).toPromise();
@@ -248,5 +369,36 @@ export class AppComponent implements OnInit, OnDestroy {
   onImageError(event: Event) {
     const img = event.target as HTMLImageElement;
     img.src = 'assets/images/placeholder.jpg';
+  }
+
+  /* Очистить поле поиска */
+  clearSearch() {
+    this.searchQuery = '';
+    this.cdr.detectChanges();
+  }
+
+  /* Фильтр по названию и категории */
+  get filteredLibrary(): LibraryItem[] {
+    let list = this.library;
+    if (this.selectedCategoryId) {
+      list = list.filter(i => (i.categoryId ?? null) === this.selectedCategoryId);
+    }
+    if (!this.searchQuery) return list;
+    const q = this.searchQuery.trim().toLowerCase();
+    return list.filter(i => (i.title || '').toLowerCase().includes(q));
+  }
+
+  get currentCategoryTitle(): string {
+    return this.categories.find(c => c.id === this.selectedCategoryId)?.title || '';
+  }
+
+  getSelectedCategoryTitle(): string {
+    const c = this.categories.find(c => c.id === this.selectedCategoryId);
+    return c?.title || '';
+  }
+
+  // Simple id generator for dev-mode categories
+  private genId() {
+    return 'c-' + Math.random().toString(36).slice(2, 9);
   }
 }
